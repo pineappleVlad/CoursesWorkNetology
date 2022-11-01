@@ -52,6 +52,7 @@ class YandexUpload:
         with open("photos_info.json", encoding="utf-8") as file:
             requests.put(api_base_url + 'v1/disk/resources', params={'path': folder_name}, headers=headers)
             list_photos = []
+            progress_count = 0
             for i in json.load(file):
                 upload_url = api_base_url + 'v1/disk/resources/upload'
                 if str(i["file_name"]) in list_photos:
@@ -65,6 +66,8 @@ class YandexUpload:
                         "url": i["url"]
                     })
                 list_photos.append(i["file_name"])
+                progress_count += 1
+                print(f"Фото номер {progress_count} успешно загружено")
             return
 
 
