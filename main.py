@@ -36,39 +36,38 @@ class GetVkUrl:
                 information_dict["date"] = res.json()["response"]["items"][i]["date"]
                 dict_list.append(information_dict)
             json.dump(dict_list, file, indent=1)
-        return res.json()
+        return dict_list
 
 class YandexUpload:
     def __init__(self, token):
         self.token = token
 
-    def upload(self, folder_name):
+    def upload(self, folder_name, dict_list):
         headers = {
             'Content-Type': 'application/json',
             'Authorization': 'OAuth {}'.format(self.token)
         }
         api_base_url = "https://cloud-api.yandex.net/"
 
-        with open("photos_info.json", encoding="utf-8") as file:
-            requests.put(api_base_url + 'v1/disk/resources', params={'path': folder_name}, headers=headers)
-            list_photos = []
-            progress_count = 0
-            for i in json.load(file):
-                upload_url = api_base_url + 'v1/disk/resources/upload'
-                if str(i["file_name"]) in list_photos:
-                    r = requests.post(upload_url, headers=headers, params={
-                        "path": folder_name + "/" + i["file_name"] + "_" + i["date"],
-                        "url": i["url"]
-                    })
-                else:
-                    r = requests.post(upload_url, headers=headers, params={
-                        "path": folder_name + "/" + i["file_name"],
-                        "url": i["url"]
-                    })
-                list_photos.append(i["file_name"])
-                progress_count += 1
-                print(f"Фото номер {progress_count} успешно загружено")
-            return
+        requests.put(api_base_url + 'v1/disk/resources', params={'path': folder_name}, headers=headers)
+        list_photos = []
+        progress_count = 0
+        for dictionary in dict_list:
+            upload_url = api_base_url + 'v1/disk/resources/upload'
+            if str(dictionary["file_name"]) in list_photos:
+                file_upload = requests.post(upload_url, headers=headers, params={
+                    "path": folder_name + "/" + dictionary["file_name"] + "_" + dictionary["date"],
+                    "url": dictionary["url"]
+                })
+            else:
+                file_upload = requests.post(upload_url, headers=headers, params={
+                    "path": folder_name + "/" + dictionary["file_name"],
+                    "url": dictionary["url"]
+                })
+            list_photos.append(dictionary["file_name"])
+            progress_count += 1
+            print(f"Фото номер {progress_count} успешно загружено")
+        return
 
 
 
@@ -80,5 +79,5 @@ if __name__ == "__main__":
     dict__ = vk_client.get_photos("")
     token_2 = ""
     ya_client = YandexUpload(token_2)
-    ya_client.upload("my_vk_photos")
+    ya_client.upload("my_vk_photos", dict__)
 
